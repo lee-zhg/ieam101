@@ -1,0 +1,11 @@
+{
+  "properties": [
+    { "name": "openhorizon.example", "value": "helloworld" },
+    { "name": "device.location", "value": "A1" },
+    { "name": "device.function", "value": "gateway" },
+    { "name": "device.status", "value": "active" },
+    { "name": "device.type", "value": "linux" }
+  ],
+  "constraints": [
+  ]
+}

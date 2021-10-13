@@ -1,0 +1,8 @@
+
+Document
+	https://cloud.ibm.com/docs/assistant?topic=assistant-deploy-sms#deploy-sms-setup
+
+
+
+
+

@@ -1,0 +1,11 @@
+{
+  "properties": [
+    { "name": "openhorizon.example", "value": "helloworld2" },
+    { "name": "device.location", "value": "A2" },
+    { "name": "device.function", "value": "camera" },
+    { "name": "device.status", "value": "active" },
+    { "name": "device.type", "value": "camera" }
+  ],
+  "constraints": [
+  ]
+}
