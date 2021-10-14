@@ -50,9 +50,10 @@ The exercise helps you understand
 - deploy IEAM policies using patterns
 - deploy IEAM policies using policies
 - CI/CD process for creating edge services
+- Secrets Management
+- Model Management
 
 - zero touch IEAM agent deployment and registering of SDO (Secure Device Onboard) device
-- IEAM secret
 - Cluster agent
 
 IEAM hub should have been deployed before you start the exercise. VM machines running Ubuntu v20.x are used to simulate a edge node for the remaining of the exercise. For a full list of supported edge nodes, refer to [Supported architectures and operating systems](https://www.ibm.com/docs/en/edge-computing/4.3?topic=devices-preparing-edge-device).
@@ -113,7 +114,7 @@ Before you can work with your edge node, you need to prepare a shell environment
     hzn exchange user list
 
     {
-      "ford-mvp/admin": {
+      "$HZN_ORG_ID/admin": {
         "password": "********",
         "email": "admin@does.not.exist.com",
         "admin": true,
@@ -650,7 +651,7 @@ By now your edge device should have formed an agreement with one of the Horizon 
 
     [
       {
-        "name": "Policy for ford-mvp/itzvsi-48y6dp6p merged with ford-mvp/policy-ibm.helloworld_1.0.0",
+        "name": "Policy for $HZN_ORG_ID/itzvsi-48y6dp6p merged with $HZN_ORG_ID/policy-ibm.helloworld_1.0.0",
         "current_agreement_id": "570e724f3d2b140b81c7d700923852646e28422f8527e5a4bf0706cc9e1afceb",
         "consumer_id": "IBM/agbot",
         "agreement_creation_time": "2021-10-14 00:53:44 +0000 UTC",
@@ -669,7 +670,7 @@ By now your edge device should have formed an agreement with one of the Horizon 
     ]
     ```
 
-> Note: you did not explicitly deploy the service `helloworld` this time. The `deployment policy policy-ibm.helloworld_1.0.0` did it for you. You do not have to be on your edge node when the service is automaticaally deployed this time. 
+> Note: you did not explicitly deploy the service `helloworld` this time. Its deployment is the result of the `deployment policy policy-ibm.helloworld_1.0.0` and the node policy of your edge device.
 
 > Note: you only have a single edge node for this exercise. Image you have hundreds of thousands of edge devices in your production system, and you are able to manage and deploy services remotely from a central location. It's the power of IEAM.
 
@@ -706,7 +707,7 @@ If you like to retrieve and view an existing `deployment policy`,
 
     ```
     {
-      "ford-mvp/policy-ibm.helloworld_1.0.0": {
+      "$HZN_ORG_ID/policy-ibm.helloworld_1.0.0": {
         "owner": "root/root",
         "label": "ibm.helloworld Deployment Policy",
         "description": "A super-simple sample Horizon Deployment Policy",
@@ -748,7 +749,7 @@ If you like to retrieve and view an existing `deployment policy`,
 
 ##### Step 6.3.3 - Creating a New Deployment Policy for Service `web-hello-python-<your name>`
 
-To create a new `deployment policy`,
+You create a new deployment policy for deploying service `web-hello-python-<your name>` in this section. To create a new `deployment policy`,
 
 1. In your shell of the edge node.
 
@@ -759,9 +760,288 @@ To create a new `deployment policy`,
     export SERVICE_VERSION=1.0.0
     ```
 
-1. 
+  For examplle,
+
+    ```
+    export SERVICE_NAME=web-hello-python-123
+    export SERVICE_VERSION=1.0.0
+    ```
+
+1. Create a new `deployment policy` based on content in file `data/deployment.policy.1.json`.
+
+    ```
+    hzn exchange deployment addpolicy --json-file=data/deployment.policy.1.json web-hello-python-<your name>
+    ```
+
+    For example,
+
+    ```
+    hzn exchange deployment addpolicy --json-file=data/deployment.policy.1.json web-hello-python-123
+    ```
+
+1. Retrieve a list of `deployment policy` in your current `ORG ID` which is defined in the environment variable `HZN_ORG_ID` of the shell.
+
+    ```
+    hzn exchange deployment listpolicy
+    ```
+
+1. A list of `Deployment Policy` name is retrieved.
+
+    ```
+    [
+      "$HZN_ORG_ID/policy-ibm.helloworld_1.0.0",
+      "$HZN_ORG_ID/policy-nginx-operator_1.0.0",
+      "$HZN_ORG_ID/policy-ibm.cpu2evtstreams_1.4.3",
+      "$HZN_ORG_ID/web-hello-python-123"
+    ]
+    ```
+
+1. Retrieve the detail information of `deployment policy $HZN_ORG_ID/web-hello-python-<your name>`.
+
+    ```
+    hzn exchange deployment listpolicy $HZN_ORG_ID/web-hello-python-<your name>
+    ```
+
+    For example,
+
+    ```
+    hzn exchange deployment listpolicy $HZN_ORG_ID/web-hello-python-123
+    ```
+
+1. `Deployment Policy $HZN_ORG_ID/web-hello-python-<your name>` is retrieved. For example,
+
+    ```{
+      "$HZN_ORG_ID/web-hello-python-123": {
+        "owner": "$HZN_ORG_ID/admin",
+        "label": "$HZN_ORG_ID/web-hello-python-123 Deployment Policy",
+        "description": "A custom Horizon Deployment Policy",
+        "service": {
+          "name": "web-hello-python-123",
+          "org": "$HZN_ORG_ID",
+          "arch": "*",
+          "serviceVersions": [
+            {
+              "version": "1.0.0",
+              "priority": {},
+              "upgradePolicy": {}
+            }
+          ],
+          "nodeHealth": {}
+        },
+        "constraints": [
+          "device.function == gateway"
+        ],
+        "created": "2021-10-14T03:41:21.347016Z[UTC]",
+        "lastUpdated": "2021-10-14T03:41:21.347002Z[UTC]"
+      }
+    }
+    ```
 
 
+##### Step 6.3.4 - Verifying the Auto Deployment of Service `web-hello-python-<your name>` on your Edge Node
+
+You created a new deployment policy `$HZN_ORG_ID/web-hello-python-<your name>` in the previous section. The policy has a constraint `device.function == gateway`.
+
+If you recall, the node policy for your edge device has a property `{ "name": "device.function", "value": "gateway" }`. As the result of both deployment policy and node policy, your edge device satifies the deployment requirements of the new deployment policy. So, the service `web-hello-python-<your name>` should have been automatically deployed to your edge device after both deployment policy and node policy are effective.
+
+To verify automatic deployment of service `web-hello-python-<your name>` on your edge node,
+
+1. In your shell of the edge node.
+
+1. Verify the service `web-hello-python-<your name>` has been deployed to your edge device. An agreement on your device should be appear and `agreement_finalized_time` and `agreement_execution_start_time` fields should have been filled in.
+
+    ```
+    hzn agreement list
+    ```
+
+1. You should receive two instances of agreement and one of them is for service `web-hello-python-<your name>`. For example,
+
+    ```
+    [
+      {
+        "name": "Policy for $HZN_ORG_ID/itzvsi-48y6dp6p merged with $HZN_ORG_ID/policy-ibm.helloworld_1.0.0",
+        "current_agreement_id": "570e724f3d2b140b81c7d700923852646e28422f8527e5a4bf0706cc9e1afceb",
+        "consumer_id": "IBM/agbot",
+        "agreement_creation_time": "2021-10-14 00:53:44 +0000 UTC",
+        "agreement_accepted_time": "2021-10-14 00:53:54 +0000 UTC",
+        "agreement_finalized_time": "2021-10-14 00:53:54 +0000 UTC",
+        "agreement_execution_start_time": "2021-10-14 00:53:55 +0000 UTC",
+        "agreement_data_received_time": "",
+        "agreement_protocol": "Basic",
+        "workload_to_run": {
+          "url": "ibm.helloworld",
+          "org": "IBM",
+          "version": "1.0.0",
+          "arch": "amd64"
+        }
+      },
+      {
+        "name": "Policy for $HZN_ORG_ID/itzvsi-48y6dp6p merged with $HZN_ORG_ID/web-hello-python-123",
+        "current_agreement_id": "cda859fac111aa021fc4cde6d547cb0a3f561193ac70c0d82d33e7baea1deb96",
+        "consumer_id": "IBM/agbot",
+        "agreement_creation_time": "2021-10-14 03:42:29 +0000 UTC",
+        "agreement_accepted_time": "2021-10-14 03:42:39 +0000 UTC",
+        "agreement_finalized_time": "2021-10-14 03:42:40 +0000 UTC",
+        "agreement_execution_start_time": "2021-10-14 03:42:41 +0000 UTC",
+        "agreement_data_received_time": "",
+        "agreement_protocol": "Basic",
+        "workload_to_run": {
+          "url": "web-hello-python-123",
+          "org": "$HZN_ORG_ID",
+          "version": "1.0.0",
+          "arch": "amd64"
+        }
+      }
+    ]
+    ```
+
+1. Verify two containers are running on edge node.
+
+    ```
+    docker ps
+    ```
+
+1. Verify that the new `web-hello-python-<your name>` service is running on your edge node.
+
+    - Test your containerize workload by opening a browser session to http://localhost:8000
+    - Test the container via curl comand
+
+      ```
+      curl -sS http://localhost:8000
+
+      <!DOCTYPE html>
+
+      <html>
+      <head>
+
+      <meta charset="utf-8">
+
+      <title>WebHello</title>
+
+      </head>
+      <body>
+      Hello, "172.17.0.1".
+      </body>
+      </html>
+      ```
+
+> Note: once again, you did not explicitly deploy the service `web-hello-python-<your name>` on your edge device. Its deployment is the result of the `deployment policy $HZN_ORG_ID/web-hello-python-123` and the node policy of your edge device. So far, both services running on your edge device is the result of powerful IEAM autonomous features.
+
+
+##### Step 6.3.5 - Updating Deployment Policy
+
+You make changes to your new deployment policy in this section. The updated policy is provided in file `data/deployment.policy.2.json` of the repo. The constraint of the revised deployment policy will be changed to `device.function == sensor` from `device.function == gateway`.
+
+After the constraint update, no edge device will meet the deployment requirements of the revised deployment policy. As the result, the current `agreement` between your IEAM hub and edge device will be removed and the service `web-hello-python-<your name>` will be undeployed on your edge device.
+
+To update a `deployment policy`,
+
+1. In your shell of the edge node.
+
+1. Make sure that environment variable `SERVICE_NAME` and `SERVICE_VERSION` are set.
+
+    ```
+    export SERVICE_NAME=web-hello-python-<your name>
+    export SERVICE_VERSION=1.0.0
+    ```
+
+    For examplle,
+
+    ```
+    export SERVICE_NAME=web-hello-python-123
+    export SERVICE_VERSION=1.0.0
+    ```
+
+1. update your `deployment policy` based on content in file `data/deployment.policy.2.json`.
+
+    ```
+    hzn exchange deployment addpolicy --json-file=data/deployment.policy.2.json web-hello-python-<your name>
+    ```
+
+  For example,
+
+    ```
+    hzn exchange deployment addpolicy --json-file=data/deployment.policy.2.json web-hello-python-123
+    ```
+
+1. Retrieve a list of `deployment policy` in your current `ORG ID` which is defined in the environment variable `HZN_ORG_ID` of the shell.
+
+    ```
+    hzn exchange deployment listpolicy
+    ```
+
+1. A list of `Deployment Policy` name is retrieved.
+
+    ```
+    [
+      "$HZN_ORG_ID/policy-ibm.helloworld_1.0.0",
+      "$HZN_ORG_ID/policy-nginx-operator_1.0.0",
+      "$HZN_ORG_ID/policy-ibm.cpu2evtstreams_1.4.3",
+      "$HZN_ORG_ID/web-hello-python-123"
+    ]
+    ```
+
+1. Retrieve the detail information of `deployment policy $HZN_ORG_ID/web-hello-python-<your name>`.
+
+    ```
+    hzn exchange deployment listpolicy $HZN_ORG_ID/web-hello-python-<your name>
+    ```
+
+    For example,
+
+    ```
+    hzn exchange deployment listpolicy $HZN_ORG_ID/web-hello-python-123
+    ```
+
+1. `Deployment Policy $HZN_ORG_ID/web-hello-python-<your name>` is retrieved. For example,
+
+    ```{
+      "$HZN_ORG_ID/web-hello-python-123": {
+        "owner": "$HZN_ORG_ID/admin",
+        "label": "$HZN_ORG_ID/web-hello-python-123 Deployment Policy",
+        "description": "A custom Horizon Deployment Policy",
+        "service": {
+          "name": "web-hello-python-123",
+          "org": "$HZN_ORG_ID",
+          "arch": "*",
+          "serviceVersions": [
+            {
+              "version": "1.0.0",
+              "priority": {},
+              "upgradePolicy": {}
+            }
+          ],
+          "nodeHealth": {}
+        },
+        "constraints": [
+          "device.function == sensor"
+        ],
+        "created": "2021-10-14T03:41:21.347016Z[UTC]",
+        "lastUpdated": "2021-10-14T03:41:21.347002Z[UTC]"
+      }
+    }
+    ```
+
+
+##### Step 6.3.6 - Verifying Auto Undeployment of Service `web-hello-python-<your name>` on your Edge Node
+
+To verify automatic undeployment of service `web-hello-python-<your name>` on your edge node,
+
+1. In your shell of the edge node.
+
+1. Verify the service `web-hello-python-<your name>` has been undeployed on your edge device. You should have a single `agreement` for your edge node now.
+
+    ```
+    hzn agreement list
+    ```
+
+1. You should receive a single agreement and it's for service `helloworld`. No agreement for service `web-hello-python-<your name>` exists.
+
+1. Verify only one container is running on edge node.
+
+    ```
+    docker ps
+    ```
 
 
 #### Step 6.4 - Model Policy
@@ -769,7 +1049,14 @@ To create a new `deployment policy`,
 Model policy limits the edge node where the model is deployed. Model creator or data scentist defines the model policy when creating the model.
 
 
+### Step 7 - Model Management Service
 
+[Horizon Hello Model Management Service (MMS) Example Edge Service](https://github.com/open-horizon/examples/tree/master/edge/services/helloMMS)
+
+
+### Step 8 - Secrets Manager
+
+[OpenHorizon Hello Secret World Example Edge Service](https://github.com/open-horizon/examples/tree/master/edge/services/helloSecretWorld)
 
 
 ## Reference
