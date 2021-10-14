@@ -191,7 +191,7 @@ Using a deployment pattern is a straightforward and simple way to deploy a servi
 
     !["ieam"](docs/images/ieam-01.png)
 
-1. Register your edge node by using the helloworld pattern.
+1. Register your edge node by using the `helloworld` pattern.
 
     ```
     hzn register -p IBM/pattern-ibm.helloworld -s ibm.helloworld --serviceorg IBM
@@ -349,11 +349,27 @@ The core principle of IBM Edge Application Manager is to orchestrate containizer
     make publish-service
     ```
 
+1. Verify service `web-hello-python-<your name>` was created.
+
+    ```
+    hzn exchange service list
+    ```
+
+    > Note: write down the new service name. For example, `<your-org-id>/web-hello-python-<your name>_1.0.0_amd64`.
+
 1. Publish a new IEAM pattern.
 
     ```
     make publish-pattern
     ```
+
+1. Verify pattern `web-hello-python-<your name>` was created.
+
+    ```
+    hzn exchange pattern list
+    ```
+
+    > Note: write down the new pattern name. For example, `your-org-id/pattern-web-hello-python-<your name>`.
 
 1. If you are running any pattern on your specific Horizon edge node, you will need to unregister the prior IEAM pattern. Remember, only one deployment pattern can be registered on an edge node.
 
@@ -361,21 +377,24 @@ The core principle of IBM Edge Application Manager is to orchestrate containizer
     hzn unregister -f
     ```
 
-1. Deploy the new `web-hello-python` service to your edge node via pattern.
+1. Deploy the new `web-hello-python-<your name>` service to your edge node via pattern via the pipeline.
 
     ```
     make agent-run
-    watch hzn agreement list
-    ...
-    make test
     ```
 
-1. Verify that the new `web-hello-python` service is running on your edge node.
+1. Verify service helloworld is running on your edge node.
+
+    ```
+    hzn agreement list
+    ```
+
+1. Verify that the new `web-hello-python-<your name>` service is running on your edge node.
 
     - Test your containerize workload by opening a browser session to http://localhost:8000
     - Test the container via curl comand
 
-      ```sh
+      ```
       curl -sS http://localhost:8000
 
       <!DOCTYPE html>
@@ -394,17 +413,35 @@ The core principle of IBM Edge Application Manager is to orchestrate containizer
       </html>
       ```
 
-1. Unregister your edge node (which will also stop the new `web-hello-python` service),
+1. Unregister your edge node (which will also stop the new `web-hello-python-<your name>` service),
 
     ```
     hzn unregister -f
     ```
 
+1. Register your edge node by using the `$HZN_ORG_ID/pattern-web-hello-python-<your name>` pattern in the IEAM hub.
 
+    ```
+    hzn register -p $HZN_ORG_ID/pattern-web-hello-python-<your name> -s "web-hello-python-<your name>" --serviceorg $HZN_ORG_ID
+    ```
 
+    For exaample,
 
+    ```
+    hzn register -p $HZN_ORG_ID/pattern-web-hello-python-123 -s "web-hello-python-123_1.0.0_amd64" --serviceorg $HZN_ORG_ID
+    ```
 
+1. Verify service helloworld is running on your edge node.
 
+    ```
+    hzn agreement list
+    ```
+
+1. Unregister your edge node (which will also stop the new `web-hello-python-<your name>` service),
+
+    ```
+    hzn unregister -f
+    ```
 
 
 ### Step 6 - Deploying Service onto Edge Node using Policies
@@ -453,43 +490,49 @@ It defines the edge node as a `gateway` running Linux OS. `openhorizon.example=h
 
 1. In your shell of the edge node.
 
+1. Switch back to `~/ieam101` folder.
+
+    ```
+    ~/ieam101
+    ```
+
 1. Unregister your node. This ensures you start in a clean environment.
 
-  ```
-  hzn unregister -f
-  ```
+    ```
+    hzn unregister -f
+    ```
   
 1. Register your edge node with a node policy.
 
-  ```
-  hzn register --policy data/node.policy.1.json
-  ```
+    ```
+    hzn register --policy data/node.policy.1.json
+    ```
 
 1. Sample command output.
 
-  ```
-  hzn register --policy data/node.policy.1.json
+    ```
+    hzn register --policy data/node.policy.1.json
 
-  Horizon Exchange base URL: https://cp-console.itzroks-1000003bw1-0l4f16-6ccd7f378ae819553d37d5f2ee142bd6-0000.us-east.containers.appdomain.cloud/edge-exchange/v1
-  Using node ID 'itzvsi-48y6dp6p' from the Horizon agent
-  Generated random node token
-  Updating node token...
-  Will proceeed with the given node policy.
-  Updating the node policy...
-  Initializing the Horizon node with node type 'device'...
-  Note: no input file was specified. This is only valid if none of the services need variables set.
-  However, if there is 'userInput' specified in the node already in the Exchange, the userInput will be used.
-  Changing Horizon state to configured to register this node with Horizon...
-  Horizon node is registered. Workload agreement negotiation should begin shortly. Run 'hzn agreement list' to view.
-  ```
+    Horizon Exchange base URL: https://cp-console.itzroks-1000003bw1-0l4f16-6ccd7f378ae819553d37d5f2ee142bd6-0000.us-east.containers.appdomain.cloud/edge-exchange/v1
+    Using node ID 'itzvsi-48y6dp6p' from the Horizon agent
+    Generated random node token
+    Updating node token...
+    Will proceeed with the given node policy.
+    Updating the node policy...
+    Initializing the Horizon node with node type 'device'...
+    Note: no input file was specified. This is only valid if none of the services need variables set.
+    However, if there is 'userInput' specified in the node already in the Exchange, the userInput will be used.
+    Changing Horizon state to configured to register this node with Horizon...
+    Horizon node is registered. Workload agreement negotiation should begin shortly. Run 'hzn agreement list' to view.
+    ```
 
 1. Review the Node Policy.
 
-  ```
-  hzn policy list
-  ```
+    ```
+    hzn policy list
+    ```
 
-  > Notice: in addition to the properties stated in the `node.policy.1.json` file, Horizon has added a few more (openhorizon.cpu, openhorizon.arch, and openhorizon.memory). Horizon provides this additional information automatically and these properties may be used in any of your Policy constraints.
+    > Notice: in addition to the properties stated in the `node.policy.1.json` file, Horizon has added a few more (openhorizon.cpu, openhorizon.arch, and openhorizon.memory). Horizon provides this additional information automatically and these properties may be used in any of your Policy constraints.
 
 
 #### Step 6.2 - Service Policy
@@ -512,6 +555,8 @@ Below is the sample service policy attached to service `ibm.helloworld` when it 
 
 The above sample Service Policy doesn't has any properties, but it does have a constraint. This example constraint states that their Service must only run on edge nodes with 100 MB or more memory.
 
+1. In your shell of the edge node.
+
 1. View the service policy attached to service `ibm.helloworld`.
 
   ```
@@ -524,6 +569,198 @@ The above sample Service Policy doesn't has any properties, but it does have a c
 #### Step 6.3 - Deployment Policy
 
 Deployment policy defines where the service should run. Policy administrator defines the deployment policy when deploying the service.
+
+Deployment policy drives service deployment. Like the other policy types, it contains a set of properties and constraints, but it also contains other things. For example, it explicitly identifies a service to be deployed, and it can optionally contain configuration variable values, service rollback versions, and node health configuration information. The Deployment policy approach for configuration values is powerful because this operation can be performed centrally, with no need to connect directly to the edge node.
+
+Administrators can create a deployment policy, and IEAM uses that policy to locate all of the devices that match the defined constraints and deploys the specified service to those devices using the service variables configured in the policy. Service rollback versions instruct IEAM which service versions should be deployed if a higher version of the service fails to deploy. The node health configuration indicates how IEAM should gauge the health (heartbeats and management hub communication) of a node before determining if the node is out of policy.
+
+Because deployment policies capture the more dynamic, business-like service properties and constraints, they are expected to change more often than service policy. Their lifecycle is independent from the service they refer to, which gives the policy administrator the ability to state a specific service version or a version range. IEAM then merges service policy and deployment policy, and then attempts to find nodes whose policy is compatible with that.
+
+##### Step 6.3.1 - Viewing Agreement for `helloworld` Service
+
+Deployment Policy is what ties together Edge Nodes, Published Services, and the Policies defined for each of those, making it roughly analogous to the Deployment Patterns you have previously worked with. The Deployment Policy approach for configuration values is more powerful because this operation can be performed centrally (no need to connect directly to the Edge Node).
+
+So far, you have defined a `node policy` based on the file `data/node.policy.1.json`. It mainly defines  bunch of properties. For example, `openhorizon.example=helloworld` and `device.function=gateway`. 
+
+You also viewed a out-of-box `service policy` of `ibm.helloworld` which define one property for service `helloworld`. For simplicity, service policy is ignored in this repo.
+
+IEAM also provides an out-of-box `deployment policy` of `policy-ibm.helloworld_1.0.0` for deploying service `helloworld`. Below is the JSON representation of the `policy-ibm.helloworld_1.0.0`.
+
+```
+{
+  "label": "$SERVICE_NAME Deployment Policy",
+  "description": "A super-simple sample Horizon Deployment Policy",
+  "service": {
+    "name": "$SERVICE_NAME",
+    "org": "IBM",
+    "arch": "*",
+    "serviceVersions": [
+      {
+        "version": "$SERVICE_VERSION",
+        "priority":{}
+      }
+    ]
+  },
+  "properties": [
+  ],
+  "constraints": [
+    "openhorizon.example == helloworld"
+  ],
+  "userInput": [
+    {
+      "serviceOrgid": "IBM",
+      "serviceUrl": "$SERVICE_NAME",
+      "serviceVersionRange": "[0.0.0,INFINITY)",
+      "inputs": [
+        {
+          "name": "HW_WHO",
+          "value": "Valued Customer"
+        }
+      ]
+    }
+  ]
+}
+```
+
+This sample `Deployment Policy` doesn't provide any properties, but it does have one constraints value that is satisfied by the properties set in the `node.policy.1.json` file. And, file `node.policy.1.json` was used to register your edge node in the previous section. So, this `Deployment Policy` should successfully deploy the service `helloworld` onto your `Edge Node`.
+
+```
+"constraints": [
+    "openhorizon.example == helloworld"
+  ],
+```
+
+At the end, the `userInput` section defines one configuration variable, `HW_WHO`, and a value for `HW_WHO` (i.e., Valued Customer).
+
+By now your edge device should have formed an agreement with one of the Horizon agreement bots (this typically takes about 15 seconds). 
+
+
+1. In your shell of the edge node.
+
+1. Verify the service `helloworld` has been deployed to your edge device. An agreement on your device should be appear and `agreement_finalized_time` and `agreement_execution_start_time` fields should have been filled in.
+
+    ```
+    hzn agreement list
+    ```
+
+1. You should receive an instance of agreement. For example,
+
+    ```
+    hzn agreement list
+
+    [
+      {
+        "name": "Policy for ford-mvp/itzvsi-48y6dp6p merged with ford-mvp/policy-ibm.helloworld_1.0.0",
+        "current_agreement_id": "570e724f3d2b140b81c7d700923852646e28422f8527e5a4bf0706cc9e1afceb",
+        "consumer_id": "IBM/agbot",
+        "agreement_creation_time": "2021-10-14 00:53:44 +0000 UTC",
+        "agreement_accepted_time": "2021-10-14 00:53:54 +0000 UTC",
+        "agreement_finalized_time": "2021-10-14 00:53:54 +0000 UTC",
+        "agreement_execution_start_time": "2021-10-14 00:53:55 +0000 UTC",
+        "agreement_data_received_time": "",
+        "agreement_protocol": "Basic",
+        "workload_to_run": {
+          "url": "ibm.helloworld",
+          "org": "IBM",
+          "version": "1.0.0",
+          "arch": "amd64"
+        }
+      }
+    ]
+    ```
+
+> Note: you did not explicitly deploy the service `helloworld` this time. The `deployment policy policy-ibm.helloworld_1.0.0` did it for you. You do not have to be on your edge node when the service is automaticaally deployed this time. 
+
+> Note: you only have a single edge node for this exercise. Image you have hundreds of thousands of edge devices in your production system, and you are able to manage and deploy services remotely from a central location. It's the power of IEAM.
+
+
+##### Step 6.3.2 - Retrieving Deployment Policy for Service `helloworld`
+
+If you like to retrieve and view an existing `deployment policy`,
+
+1. In your shell of the edge node.
+
+1. Retrieve a list of `deployment policy` in your current `ORG ID` which is defined in the environment variable `HZN_ORG_ID` of the shell.
+
+    ```
+    hzn exchange deployment listpolicy
+    ```
+
+1. You receive a list of `deployment policy` name. For example,
+
+    ```
+    [
+      "$HZN_ORG_ID/policy-ibm.helloworld_1.0.0",
+      "$HZN_ORG_ID/policy-nginx-operator_1.0.0",
+      "$HZN_ORG_ID/policy-ibm.cpu2evtstreams_1.4.3"
+    ]
+    ```
+
+1. Retrieve the detail information of `deployment policy $HZN_ORG_ID/policy-ibm.helloworld_1.0.0`.
+
+    ```
+    hzn exchange deployment listpolicy $HZN_ORG_ID/policy-ibm.helloworld_1.0.0
+    ```
+
+1. You receive the definition of `deployment policy $HZN_ORG_ID/policy-ibm.helloworld_1.0.0`. For example,
+
+    ```
+    {
+      "ford-mvp/policy-ibm.helloworld_1.0.0": {
+        "owner": "root/root",
+        "label": "ibm.helloworld Deployment Policy",
+        "description": "A super-simple sample Horizon Deployment Policy",
+        "service": {
+          "name": "ibm.helloworld",
+          "org": "IBM",
+          "arch": "*",
+          "serviceVersions": [
+            {
+              "version": "1.0.0",
+              "priority": {},
+              "upgradePolicy": {}
+            }
+          ],
+          "nodeHealth": {}
+        },
+        "constraints": [
+          "openhorizon.example == helloworld"
+        ],
+        "userInput": [
+          {
+            "serviceOrgid": "IBM",
+            "serviceUrl": "ibm.helloworld",
+            "serviceVersionRange": "[0.0.0,INFINITY)",
+            "inputs": [
+              {
+                "name": "HW_WHO",
+                "value": "from the EDGE!"
+              }
+            ]
+          }
+        ],
+        "created": "2021-10-08T14:12:47.973622Z[UTC]",
+        "lastUpdated": "2021-10-08T14:12:47.973600Z[UTC]"
+      }
+    }
+    ```
+
+
+##### Step 6.3.3 - Creating a New Deployment Policy for Service `web-hello-python-<your name>`
+
+To create a new `deployment policy`,
+
+1. In your shell of the edge node.
+
+1. Set environment variable `SERVICE_NAME` and `SERVICE_VERSION`.
+
+    ```
+    export SERVICE_NAME=web-hello-python-<your name>
+    export SERVICE_VERSION=1.0.0
+    ```
+
+1. 
+
 
 
 
